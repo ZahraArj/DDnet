@@ -1,0 +1,45 @@
+cat > .gitignore << 'EOF'
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Checkpoints and weights
+*.pt
+*.pth
+*.ckpt
+checkpoint_*.pt
+
+# Data
+data/
+*.h5
+*.hdf5
+
+# Outputs / logs
+runs/
+outputs/
+*.jpg
+*.png
+*.mp4
+
+# Conda / pip
+.env
+.venv
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Hydra outputs
+outputs/
+multirun/
+.hydra/
+EOF
+
+git add .gitignore
+git commit -m "add .gitignore"
+.vscode/
+.vscode/

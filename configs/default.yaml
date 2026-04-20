@@ -1,0 +1,42 @@
+model:
+  vit_arch: "vit_base_patch16_224"
+  vit_pretrained: true
+  fpn_out_channels: 256
+  fpn_scales: [4, 8, 16, 32]
+  cross_attn_heads: 8
+  cross_attn_layers: 2
+  depth_min: 0.1
+  depth_max: 100.0
+  desc_dim: 128
+  ema_momentum: 0.996
+
+training:
+  stage1:
+    epochs: 20
+    active_losses: [depth_sup, desc_sup, feat]
+    lr: 1.0e-4
+  stage2:
+    epochs: 30
+    active_losses: [depth_sup, desc_sup, feat, reproj, depth_mv, desc_mv, smooth]
+    lr: 5.0e-5
+  stage3:
+    epochs: 20
+    active_losses: [depth_sup, desc_sup, reproj, depth_mv, desc_mv, smooth]
+    lr: 2.0e-5
+  batch_size: 8
+  num_workers: 4
+  grad_clip: 1.0
+  lambda_depth_sup: 1.0
+  lambda_desc_sup:  1.0
+  lambda_feat:      0.5
+  lambda_reproj:    1.0
+  lambda_depth_mv:  0.5
+  lambda_desc_mv:   0.5
+  lambda_smooth:    0.1
+  n_corr_samples: 2048
+  reproj_loss_robust: "huber"
+
+data:
+  img_height: 384
+  img_width:  512
+  dataset_root: "data/"
