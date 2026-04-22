@@ -19,5 +19,5 @@ git commit -m "describe what you changed"
 git push
 
 
-cd /nas2/zahra/ddnet
+cd /nas2/zahra/ddnet/DDnet
 git pull
