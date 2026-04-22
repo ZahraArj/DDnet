@@ -59,7 +59,7 @@ class DepthDecoder(nn.Module):
         Args:  F [B, C, H/8, W/8]
         Returns: Z [B, 1, H, W]  metric depth
         """
-        x = self.up1(F)
+        x = self.up1(feat)
         x = self.up2(x)
         x = self.up3(x)
         x = self.head(x)
@@ -90,7 +90,7 @@ class DescDecoder(nn.Module):
         Args:  F [B, C, H/8, W/8]
         Returns: D [B, desc_dim, H, W]  L2-normalised
         """
-        x = self.up1(F)
+        x = self.up1(feat)
         x = self.up2(x)
         x = self.up3(x)
         x = self.head(x)
@@ -119,7 +119,7 @@ class ConfHead(nn.Module):
         Args:  F [B, C, H/8, W/8]
         Returns: M [B, 1, H, W]  confidence in [0,1]
         """
-        x = self.up1(F)
+        x = self.up1(feat)
         x = self.up2(x)
         x = self.up3(x)
         return torch.sigmoid(self.head(x))
@@ -149,7 +149,7 @@ class PointmapHead(nn.Module):
         Args:  F [B, C, H/8, W/8]
         Returns: X [B, 3, H, W]  predicted 3D pointmap
         """
-        x = self.up1(F)
+        x = self.up1(feat)
         x = self.up2(x)
         x = self.up3(x)
         return self.head(x)
@@ -185,10 +185,10 @@ class SiameseDecoders(nn.Module):
         Decode a single view's features.
         Returns: Z, D, M, X
         """
-        Z = self.depth_dec(F)
-        D = self.desc_dec(F)
-        M = self.conf_head(F)
-        X = self.ptmap_head(F)
+        Z = self.depth_dec(feat)
+        D = self.desc_dec(feat)
+        M = self.conf_head(feat)
+        X = self.ptmap_head(feat)
         return Z, D, M, X
 
     def forward(
