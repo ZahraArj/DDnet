@@ -28,6 +28,11 @@ def loss_depth_sup(
         Z_gt   : [B, 1, H, W]
         mask   : [B, 1, H, W]  valid pixel mask (optional)
     """
+    if Z_gt.shape[2:] != Z_pred.shape[2:]:
+        Z_gt = F.interpolate(Z_gt, size=Z_pred.shape[2:], mode="nearest")
+    if mask is not None and mask.shape[2:] != Z_pred.shape[2:]:
+        mask = F.interpolate(mask, size=Z_pred.shape[2:], mode="nearest")
+
     loss = F.huber_loss(Z_pred, Z_gt, reduction="none", delta=1.0)
     if mask is not None:
         loss = loss * mask
@@ -50,6 +55,11 @@ def loss_desc_sup(
         D_gt   : [B, C, H, W]
         mask   : [B, 1, H, W]
     """
+    if Z_gt.shape[2:] != Z_pred.shape[2:]:
+        Z_gt = F.interpolate(Z_gt, size=Z_pred.shape[2:], mode="nearest")
+    if mask is not None and mask.shape[2:] != Z_pred.shape[2:]:
+        mask = F.interpolate(mask, size=Z_pred.shape[2:], mode="nearest")
+
     D_gt_n = F.normalize(D_gt, dim=1)
     cos_sim = (D_pred * D_gt_n).sum(dim=1, keepdim=True)  # [B, 1, H, W]
     loss = 1.0 - cos_sim
