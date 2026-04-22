@@ -13,9 +13,9 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from ..models.ddnet  import DDNet
-from .losses         import LossManager
-from ..utils.logger  import TrainingLogger
+from models.ddnet  import DDNet
+from training.losses         import LossManager
+from utils.logger  import TrainingLogger
 
 
 class Trainer:
