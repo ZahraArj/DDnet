@@ -41,6 +41,7 @@ class DDNet(nn.Module):
             vit_arch=m.vit_arch,
             pretrained=m.vit_pretrained,
             out_channels=m.fpn_out_channels,
+            img_size=(cfg.data.img_height, cfg.data.img_width), 
         )
         self.cross_attn = CrossViewAttention(
             channels=m.fpn_out_channels,

@@ -1,0 +1,23 @@
+conda create -n ddnet python=3.11 -y
+
+source /opt/conda/etc/profile.d/conda.sh
+conda activate ddnet
+
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+pip install einops timm opencv-python kornia hydra-core omegaconf tensorboard tqdm numpy matplotlib
+
+
+python -m train
+
+
+
+
+
+
+git add .
+git commit -m "describe what you changed"
+git push
+
+
+cd /nas2/zahra/ddnet
+git pull

@@ -37,9 +37,9 @@ env/
 outputs/
 multirun/
 .hydra/
-EOF
+
 
 git add .gitignore
 git commit -m "add .gitignore"
 .vscode/
-.vscode/
+

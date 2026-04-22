@@ -73,6 +73,7 @@ class SiameseEncoder(nn.Module):
         vit_arch: str = "vit_base_patch16_224",
         pretrained: bool = True,
         out_channels: int = 256,
+        img_size: tuple = (384, 512),
     ):
         super().__init__()
         self.backbone = timm.create_model(
@@ -80,10 +81,11 @@ class SiameseEncoder(nn.Module):
             pretrained=pretrained,
             features_only=True,
             out_indices=(3, 6, 9, 11),
+            img_size=(384, 512),
         )
         # infer input channel dims
         with torch.no_grad():
-            dummy = torch.zeros(1, 3, 224, 224)
+            dummy = torch.zeros(1, 3, img_size[0], img_size[1])
             feats = self.backbone(dummy)
             in_channels = [f.shape[1] for f in feats]
 
