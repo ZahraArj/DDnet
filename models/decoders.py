@@ -54,7 +54,7 @@ class DepthDecoder(nn.Module):
         self.up3 = _upsample_block(64, 32)
         self.head = nn.Conv2d(32, 1, kernel_size=1)
 
-    def forward(self, F: torch.Tensor) -> torch.Tensor:
+    def forward(self, feat: torch.Tensor) -> torch.Tensor:
         """
         Args:  F [B, C, H/8, W/8]
         Returns: Z [B, 1, H, W]  metric depth
@@ -85,7 +85,7 @@ class DescDecoder(nn.Module):
         self.up3 = _upsample_block(64, 32)
         self.head = nn.Conv2d(32, desc_dim, kernel_size=1)
 
-    def forward(self, F: torch.Tensor) -> torch.Tensor:
+    def forward(self, feat: torch.Tensor) -> torch.Tensor:
         """
         Args:  F [B, C, H/8, W/8]
         Returns: D [B, desc_dim, H, W]  L2-normalised
@@ -94,7 +94,7 @@ class DescDecoder(nn.Module):
         x = self.up2(x)
         x = self.up3(x)
         x = self.head(x)
-        return F.normalize(x, dim=1)
+        return torch.nn.functional.normalize(x, dim=1)
 
 
 class ConfHead(nn.Module):
@@ -114,7 +114,7 @@ class ConfHead(nn.Module):
         self.up3 = _upsample_block(64, 32)
         self.head = nn.Conv2d(32, 1, kernel_size=1)
 
-    def forward(self, F: torch.Tensor) -> torch.Tensor:
+    def forward(self, feat: torch.Tensor) -> torch.Tensor:
         """
         Args:  F [B, C, H/8, W/8]
         Returns: M [B, 1, H, W]  confidence in [0,1]
@@ -144,7 +144,7 @@ class PointmapHead(nn.Module):
         self.up3 = _upsample_block(64, 32)
         self.head = nn.Conv2d(32, 3, kernel_size=1)
 
-    def forward(self, F: torch.Tensor) -> torch.Tensor:
+    def forward(self, feat: torch.Tensor) -> torch.Tensor:
         """
         Args:  F [B, C, H/8, W/8]
         Returns: X [B, 3, H, W]  predicted 3D pointmap
@@ -180,7 +180,7 @@ class SiameseDecoders(nn.Module):
         self.conf_head  = ConfHead(in_channels)
         self.ptmap_head = PointmapHead(in_channels)
 
-    def decode_one(self, F: torch.Tensor) -> tuple:
+    def decode_one(self, feat: torch.Tensor) -> tuple:
         """
         Decode a single view's features.
         Returns: Z, D, M, X
