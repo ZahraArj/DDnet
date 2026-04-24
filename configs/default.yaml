@@ -12,19 +12,20 @@ model:
 
 training:
   stage1:
-    epochs: 5 #20
+    epochs: 20
     active_losses: [depth_sup, desc_sup, feat]
     lr: 1.0e-4
   stage2:
-    epochs: 5 #30
+    epochs: 30
     active_losses: [depth_sup, desc_sup, feat, reproj, depth_mv, desc_mv, smooth]
     lr: 5.0e-5
   stage3:
-    epochs: 5 #20
+    epochs: 20
     active_losses: [depth_sup, desc_sup, reproj, depth_mv, desc_mv, smooth]
     lr: 2.0e-5
   batch_size: 8
-  num_workers: 0
+  batch_size_geo: 2        # smaller batch for stage 2/3 (geometry block is memory-heavy)
+  num_workers: 4
   grad_clip: 1.0
   lambda_depth_sup: 1.0
   lambda_desc_sup:  1.0

@@ -68,6 +68,7 @@ class Trainer:
         optimizer: optim.Optimizer,
         run_geometry: bool,
         stage_name: str,
+        loader=None,
     ) -> dict:
         """
         One training epoch.
@@ -75,11 +76,13 @@ class Trainer:
         """
         self.model.train()
         active = list(stage_cfg.active_losses)
+        if loader is None:
+            loader = self.train_loader
 
         epoch_totals = {}
         n_batches    = 0
 
-        for batch in tqdm(self.train_loader, leave=False):
+        for batch in tqdm(loader, leave=False):
             batch = {
                 k: v.to(self.device) if isinstance(v, torch.Tensor) else v
                 for k, v in batch.items()
@@ -119,14 +122,16 @@ class Trainer:
     # ── Validation epoch ──────────────────────────────────────
 
     @torch.no_grad()
-    def _validate(self, stage_cfg, run_geometry: bool) -> dict:
+    def _validate(self, stage_cfg, run_geometry: bool, loader=None) -> dict:
         self.model.eval()
         active = list(stage_cfg.active_losses)
+        if loader is None:
+            loader = self.val_loader
 
         totals    = {}
         n_batches = 0
 
-        for batch in self.val_loader:
+        for batch in loader:
             batch = {
                 k: v.to(self.device) if isinstance(v, torch.Tensor) else v
                 for k, v in batch.items()
@@ -158,13 +163,17 @@ class Trainer:
                   f"  ({stage_cfg.epochs} epochs)\n{'='*52}")
             optimizer = self._make_optimizer(stage_cfg.lr)
 
+            # use smaller-batch loaders when geometry block is active
+            t_loader = self.geo_train_loader if run_geometry else self.train_loader
+            v_loader = self.geo_val_loader   if run_geometry else self.val_loader
+
             for epoch in range(stage_cfg.epochs):
                 t0 = time.time()
 
                 train_losses = self._run_epoch(
-                    stage_cfg, optimizer, run_geometry, stage_name
+                    stage_cfg, optimizer, run_geometry, stage_name, t_loader
                 )
-                val_losses   = self._validate(stage_cfg, run_geometry)
+                val_losses   = self._validate(stage_cfg, run_geometry, v_loader)
 
                 epoch_time = time.time() - t0
 

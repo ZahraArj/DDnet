@@ -65,53 +65,67 @@ def soft_correspondence(
     desc_b: torch.Tensor,
     conf_a: torch.Tensor,
     temperature: float = 0.1,
+    corr_stride: int = 2,
 ) -> tuple:
     """
     For each 3D point (from view A), find its soft expected pixel
     location in view B via descriptor softmax matching.
 
     Args:
-        pts3d_a  : [B, N, 3]       — sampled 3D points from view A
-        pixels_a : [B, N, 2]       — pixel (u,v) of each sampled point
-        desc_a   : [B, C, H, W]    — view A descriptor map
-        desc_b   : [B, C, H, W]    — view B descriptor map
-        conf_a   : [B, 1, H, W]    — view A confidence map
+        pts3d_a    : [B, N, 3]    — sampled 3D points from view A
+        pixels_a   : [B, N, 2]    — pixel (u,v) of each sampled point
+        desc_a     : [B, C, H, W] — view A descriptor map
+        desc_b     : [B, C, H, W] — view B descriptor map
+        conf_a     : [B, 1, H, W] — view A confidence map
         temperature : softmax sharpness
+        corr_stride : additional spatial downsampling before computing
+                      similarity (reduces memory by corr_stride^2).
+                      corr_stride=2 → 4× less memory, minimal accuracy loss.
 
     Returns:
-        p_b_soft  : [B, N, 2]      — soft expected pixel in view B
-        weights   : [B, N]         — per-point confidence weights
+        p_b_soft  : [B, N, 2]  — soft expected pixel in view B (full res)
+        weights   : [B, N]     — per-point confidence weights
     """
     B, N, _ = pts3d_a.shape
     _, C, H, W = desc_b.shape
+
+    # optionally downsample descriptors for memory efficiency
+    if corr_stride > 1:
+        desc_b_small = F.avg_pool2d(desc_b, kernel_size=corr_stride, stride=corr_stride)
+        desc_b_small = F.normalize(desc_b_small, dim=1)
+    else:
+        desc_b_small = desc_b
+    _, _, Hc, Wc = desc_b_small.shape  # coarse H, W
 
     # look up descriptors at sampled pixels in view A
     grid_a = pixels_a.clone().float()
     grid_a[..., 0] = 2.0 * grid_a[..., 0] / (W - 1) - 1.0
     grid_a[..., 1] = 2.0 * grid_a[..., 1] / (H - 1) - 1.0
     grid_a = grid_a.unsqueeze(2)                            # [B, N, 1, 2]
-    d_a = F.grid_sample(desc_a, grid_a, align_corners=True, mode="bilinear")
-    d_a = d_a.squeeze(-1).squeeze(1)  # wrong shape after squeeze, fix:
     d_a = F.grid_sample(desc_a, grid_a, align_corners=True)
     d_a = d_a.squeeze(3).permute(0, 2, 1)                  # [B, N, C]
 
-    # flatten desc_b spatial → [B, C, HW]
-    d_b_flat = desc_b.view(B, C, -1)                       # [B, C, HW]
+    # flatten coarse desc_b spatial → [B, C, Hc*Wc]
+    d_b_flat = desc_b_small.view(B, C, -1)                 # [B, C, Hc*Wc]
 
-    # similarity scores: [B, N, HW]
-    sim = torch.bmm(d_a, d_b_flat) / temperature           # [B, N, HW]
-    attn = sim.softmax(dim=-1)                             # [B, N, HW]
+    # similarity scores: [B, N, Hc*Wc]
+    sim = torch.bmm(d_a, d_b_flat) / temperature
+    attn = sim.softmax(dim=-1)                             # [B, N, Hc*Wc]
 
-    # build pixel coordinate grid for view B
+    # build pixel coordinate grid for coarse view B,
+    # then scale back to full-res pixel coordinates
     ys, xs = torch.meshgrid(
-        torch.arange(H, device=desc_b.device, dtype=torch.float32),
-        torch.arange(W, device=desc_b.device, dtype=torch.float32),
+        torch.arange(Hc, device=desc_b.device, dtype=torch.float32),
+        torch.arange(Wc, device=desc_b.device, dtype=torch.float32),
         indexing="ij",
     )
-    coords = torch.stack([xs, ys], dim=-1).view(-1, 2)     # [HW, 2]
-    coords = coords.unsqueeze(0).expand(B, -1, -1)         # [B, HW, 2]
+    # scale coarse coords back to full-resolution pixel space
+    xs_full = xs * (W / Wc)
+    ys_full = ys * (H / Hc)
+    coords = torch.stack([xs_full, ys_full], dim=-1).view(-1, 2)  # [Hc*Wc, 2]
+    coords = coords.unsqueeze(0).expand(B, -1, -1)                # [B, Hc*Wc, 2]
 
-    # soft expected pixel location: [B, N, 2]
+    # soft expected pixel location in full resolution: [B, N, 2]
     p_b_soft = torch.bmm(attn, coords)
 
     # confidence weights from view A
