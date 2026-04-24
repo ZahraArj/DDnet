@@ -120,10 +120,20 @@ class TrainingLogger:
                       f, indent=2)
 
         # CSV (epoch-level only — step log can be huge)
+        # Use the union of all keys seen across all epochs so that
+        # new loss terms added in later stages don't break the writer.
         if self.epoch_log:
-            fieldnames = list(self.epoch_log[0].keys())
+            all_keys = []
+            seen = set()
+            for row in self.epoch_log:
+                for k in row.keys():
+                    if k not in seen:
+                        all_keys.append(k)
+                        seen.add(k)
             with open(self.csv_path, "w", newline="") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer = csv.DictWriter(f, fieldnames=all_keys,
+                                        extrasaction="ignore",
+                                        restval="")
                 writer.writeheader()
                 writer.writerows(self.epoch_log)
 
