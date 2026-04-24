@@ -37,11 +37,15 @@ class Trainer:
         val_loader,
         device: str = "cuda",
         run_name: str = "exp",
+        geo_train_loader=None,
+        geo_val_loader=None,  
     ):
         self.cfg          = cfg
         self.model        = model.to(device)
         self.train_loader = train_loader
         self.val_loader   = val_loader
+        self.geo_train_loader = geo_train_loader if geo_train_loader is not None else train_loader
+        self.geo_val_loader   = geo_val_loader   if geo_val_loader   is not None else val_loader
         self.device       = device
 
         self.log_dir  = f"runs/{run_name}"
