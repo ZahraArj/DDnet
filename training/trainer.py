@@ -230,5 +230,7 @@ class Trainer:
         print(f"  {self.log_dir}/training_log.csv")
         print(f"\nGenerate plots:")
         print(f"  python -m utils.plotting --log {self.log_dir}/training_log.json")
+        print(f"\nEvaluate pose:")
+        print(f"  python evaluate_pose.py --checkpoint checkpoint_stage3.pt --out results/")
 
         self.writer.close()
