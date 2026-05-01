@@ -11,10 +11,10 @@ __pycache__/
 *.ckpt
 checkpoint_*.pt
 
-# Data
-data/
-*.h5
-*.hdf5
+# # Data
+# data/
+# *.h5
+# *.hdf5
 
 # Outputs / logs
 runs/
