@@ -386,7 +386,7 @@ class PoseEval:
         """Area under the accuracy curve up to max_thresh degrees."""
         thresholds = np.linspace(0, max_thresh, 100)
         accs = [np.mean(np.array(errors) < t) for t in thresholds]
-        return float(np.trapezoid(accs, thresholds) / max_thresh)
+        return float(np.trapz(accs, thresholds) / max_thresh)
 
     def summary(self) -> dict:
         if not self.rot_errors:
