@@ -7,7 +7,7 @@ model:
   cross_attn_layers: 2
   depth_min: 0.1
   depth_max: 100.0
-  desc_dim: 128
+  desc_dim: 32
   ema_momentum: 0.996
 
 training:
@@ -40,4 +40,4 @@ training:
 data:
   img_height: 384
   img_width:  512
-  dataset_root: "data/"
+  dataset_root: "zahra/ddnet/Data/"
