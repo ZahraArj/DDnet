@@ -193,7 +193,7 @@ class NPZPairDataset(BaseStereoDataset):
     def _load_item(self, idx: int) -> dict:
         path = self.files[idx]
         try:
-            data = np.load(path, allow_pickle=False)
+            data = np.load(path, allow_pickle=True)
         except Exception as e:
             raise RuntimeError(f'Failed to load {path}: {e}')
 

@@ -21,7 +21,7 @@ OPTIONAL_KEYS = ['T_a','T_b']
 def check_file(path, desc_dim_expected=None, verbose=False):
     issues = []
     try:
-        d = np.load(path, allow_pickle=False)
+        d = np.load(path, allow_pickle=True)
     except Exception as e:
         return [f'LOAD ERROR: {e}']
 
@@ -137,7 +137,7 @@ def main():
                 print(f'      ✗  {iss}')
         else:
             n_ok += 1
-            d = np.load(path, allow_pickle=False)
+            d = np.load(path, allow_pickle=True)
             desc_dims.add(d['D_gt_a'].shape[0])
             if args.verbose:
                 print(f'OK    {os.path.basename(path)}')
