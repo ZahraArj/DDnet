@@ -46,8 +46,15 @@ def scale_invariant_depth_error(pred: torch.Tensor, gt: torch.Tensor,
     Returns:
         dict with 'silog', 'abs_rel', 'rmse'
     """
+    if pred.shape != gt.shape:
+        pred = torch.nn.functional.interpolate(
+            pred, size=gt.shape[-2:], mode='bilinear', align_corners=False
+        )
+
     if mask is None:
         mask = (gt > 0).float()
+    else:
+        mask = (mask > 0).float()
 
     log_diff = torch.log(pred.clamp(min=1e-6)) - torch.log(gt.clamp(min=1e-6))
     log_diff = log_diff * mask

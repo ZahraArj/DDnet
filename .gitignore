@@ -38,8 +38,14 @@ outputs/
 multirun/
 .hydra/
 
+configs.default.yaml
+EOF
+
 
 git add .gitignore
 git commit -m "add .gitignore"
 .vscode/
+
+
+
 
