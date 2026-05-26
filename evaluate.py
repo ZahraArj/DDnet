@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from models.ddnet        import DDNet
 from data.dataset        import DummyDataset
+from data.dataset import NPZPairDataset
 from utils.geometry_utils import pose_error, scale_invariant_depth_error
 
 
@@ -24,10 +25,18 @@ def evaluate(checkpoint_path: str, device: str = "cuda"):
     model.load_state_dict(ckpt["model"])
     model.eval()
 
-    dataset = DummyDataset(length=128,
-                           img_h=cfg.data.img_height,
-                           img_w=cfg.data.img_width,
-                           desc_dim=cfg.model.desc_dim)
+    # dataset = DummyDataset(length=128,
+    #                        img_h=cfg.data.img_height,
+    #                        img_w=cfg.data.img_width,
+    #                        desc_dim=cfg.model.desc_dim)
+    
+    dataset = NPZPairDataset(
+    source   = '/nas2/zahra/ddnet/Data/',
+    img_h    = cfg.data.img_height,
+    img_w    = cfg.data.img_width,
+    desc_dim = cfg.model.desc_dim,
+    split    = 'val',
+    )
     loader  = DataLoader(dataset, batch_size=4, shuffle=False, num_workers=2)
 
     depth_metrics = {"silog": [], "abs_rel": [], "rmse": []}

@@ -17,6 +17,7 @@ from pathlib import Path
 
 from models.ddnet        import DDNet
 from data.dataset        import DummyDatasetWithPose
+from data.dataset import NPZPairDataset
 from utils.eval_viz      import ReproViz, PoseEval
 
 
@@ -40,11 +41,18 @@ def evaluate(checkpoint_path: str, out_dir: str, dummy: bool,
     # ── dataset ──
     # DummyDataset generates random R_gt and t_gt so pose eval works
     # Replace with your real dataset subclass for meaningful numbers
-    ds = DummyDatasetWithPose(
-        length=128,
-        img_h=cfg.data.img_height,
-        img_w=cfg.data.img_width,
-        desc_dim=cfg.model.desc_dim,
+    # ds = DummyDatasetWithPose(
+    #     length=128,
+    #     img_h=cfg.data.img_height,
+    #     img_w=cfg.data.img_width,
+    #     desc_dim=cfg.model.desc_dim,
+    # )
+    ds = NPZPairDataset(
+    source   = '/nas2/zahra/ddnet/Data/',
+    img_h    = cfg.data.img_height,
+    img_w    = cfg.data.img_width,
+    desc_dim = cfg.model.desc_dim,
+    split    = 'val',
     )
     loader = DataLoader(ds, batch_size=4, shuffle=False, num_workers=0)
 
