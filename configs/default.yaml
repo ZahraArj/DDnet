@@ -30,14 +30,16 @@ training:
   lambda_depth_sup: 1.0
   lambda_desc_sup:  1.0
   lambda_feat:      0.5
-  lambda_reproj:    1.0
-  lambda_depth_mv:  0.5
-  lambda_desc_mv:   0.5
+  lambda_reproj:    0.0001
+  lambda_depth_mv:  0.0001
+  lambda_desc_mv:   0.01
   lambda_smooth:    0.1
   n_corr_samples: 2048
   reproj_loss_robust: "huber"
 
 data:
-  img_height: 384
-  img_width:  512
+  img_height: 480
+  img_width:  640
   dataset_root: "zahra/ddnet/Data/"
+  train_dir:   "zahra/ddnet/Data/"  
+  val_dir:     "zahra/ddnet/Data/"  

@@ -70,7 +70,7 @@ class SiameseEncoder(nn.Module):
 
     def __init__(
         self,
-        vit_arch: str = "vit_base_patch16_224",
+        vit_arch: str = 'vit_base_patch16_224',
         pretrained: bool = True,
         out_channels: int = 256,
         img_size: tuple = (384, 512),
@@ -81,7 +81,8 @@ class SiameseEncoder(nn.Module):
             pretrained=pretrained,
             features_only=True,
             out_indices=(3, 6, 9, 11),
-            img_size=(384, 512),
+            img_size=img_size,
+            dynamic_img_size=True,
         )
         # infer input channel dims
         with torch.no_grad():
