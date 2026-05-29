@@ -25,7 +25,12 @@ from data.dataset      import NPZPairDataset, DummyDataset
 @hydra.main(config_path='configs', config_name='default', version_base=None)
 def main(cfg: DictConfig):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(OmegaConf.to_yaml(cfg))
+    # print(OmegaConf.to_yaml(cfg))
+    print(f"desc_dim={cfg.model.desc_dim}  "
+      f"img={cfg.data.img_height}x{cfg.data.img_width}  "
+      f"batch={cfg.training.batch_size}  "
+      f"device={device}")
+    
     print(f'Device: {device}')
 
     # ── choose data source ──────────────────────────────────
