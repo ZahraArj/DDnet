@@ -216,7 +216,7 @@ class GeometryBlock(nn.Module):
             (src_n * w).transpose(1, 2), dst_n
         )  # [B, 3, 3]
 
-        H = H + 1e-6 * torch.eye(3, device=H.device, dtype=H.dtype)
+        H_mat = H_mat + 1e-6 * torch.eye(3, device=H_mat.device, dtype=H_mat.dtype)
         U, _, Vh = torch.linalg.svd(H_mat)
         # ensure proper rotation (det = +1)
         d = torch.linalg.det(torch.bmm(Vh.transpose(1, 2), U.transpose(1, 2)))
