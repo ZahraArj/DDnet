@@ -16,6 +16,7 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 import torch
 from torch.utils.data import DataLoader
+import logging
 
 from models.ddnet      import DDNet
 from training.trainer  import Trainer
@@ -24,6 +25,9 @@ from data.dataset      import NPZPairDataset, DummyDataset
 
 @hydra.main(config_path='configs', config_name='default', version_base=None)
 def main(cfg: DictConfig):
+    logging.getLogger('timm').setLevel(logging.WARNING)
+    logging.getLogger('huggingface_hub').setLevel(logging.WARNING)
+    logging.getLogger('httpx').setLevel(logging.WARNING)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     # print(OmegaConf.to_yaml(cfg))
     print(f"desc_dim={cfg.model.desc_dim}  "
@@ -98,7 +102,7 @@ def main(cfg: DictConfig):
     print(f'Val   pairs : {len(val_ds)}')
 
     model = DDNet(cfg)
-    model.encoder.backbone.set_grad_checkpointing(True)
+    model.encoder.backbone.model.set_grad_checkpointing(True)
     n     = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'Trainable parameters: {n/1e6:.1f}M')
 
