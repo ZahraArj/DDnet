@@ -34,7 +34,7 @@ training:
   lambda_depth_mv:  0.0001
   lambda_desc_mv:   0.01
   lambda_smooth:    0.1
-  n_corr_samples: 2048
+  n_corr_samples: 512
   reproj_loss_robust: "huber"
 
 data:

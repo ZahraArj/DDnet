@@ -12,6 +12,7 @@ import torch
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+import os
 
 from models.ddnet  import DDNet
 from training.losses         import LossManager
@@ -208,7 +209,8 @@ class Trainer:
                     )
 
             # ── checkpoint after each stage ──
-            ckpt_path = f"checkpoint_{stage_name}.pt"
+            # ckpt_path = f"checkpoint_{stage_name}.pt"
+            ckpt_path = os.path.join(self.log_dir, f"checkpoint_{stage_name}.pt")
             torch.save({
                 "model":       self.model.state_dict(),
                 "loss_mgr":    self.loss_mgr.state_dict(),
@@ -217,6 +219,7 @@ class Trainer:
                 "cfg":         self.cfg,
             }, ckpt_path)
             print(f"  Saved {ckpt_path}")
+            torch.cuda.empty_cache() 
 
         # ── final summary ──
         summary = self.logger.summary()

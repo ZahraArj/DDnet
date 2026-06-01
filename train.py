@@ -98,6 +98,7 @@ def main(cfg: DictConfig):
     print(f'Val   pairs : {len(val_ds)}')
 
     model = DDNet(cfg)
+    model.encoder.backbone.set_grad_checkpointing(True)
     n     = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'Trainable parameters: {n/1e6:.1f}M')
 
