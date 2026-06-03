@@ -29,7 +29,7 @@ class TrainingLogger:
         log_dir : directory to write log files into
     """
 
-    def __init__(self, log_dir: str = "runs"):
+    def __init__(self, log_dir: str = "runs", overwrite: bool = False):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -39,19 +39,23 @@ class TrainingLogger:
         # In-memory history
         self.step_log  = []   # every batch: {step, stage, loss_name: value, ...}
         self.epoch_log = []   # every epoch: {epoch, stage, train_loss, val_loss, time_s}
+        self.best_val_loss = float("inf")
+        self.best_epoch    = 0
 
         # Best val loss tracking
         self.best_val_loss = float("inf")
         self.best_epoch    = 0
 
-        # Load existing log if resuming
-        if self.json_path.exists():
+        # load existing log only if resuming, not overwriting
+        if not overwrite and self.json_path.exists():
             with open(self.json_path) as f:
                 data = json.load(f)
                 self.step_log  = data.get("steps", [])
                 self.epoch_log = data.get("epochs", [])
             print(f"[Logger] Resumed from {self.json_path} "
-                  f"({len(self.epoch_log)} epochs already logged)")
+                f"({len(self.epoch_log)} epochs already logged)")
+        elif overwrite and self.json_path.exists():
+            print(f"[Logger] Starting fresh log in {self.log_dir}")
 
     def log_step(self, step: int, stage: str, losses: dict):
         """
