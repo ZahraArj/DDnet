@@ -13,7 +13,6 @@ import torch.nn.functional as F
 import torchvision.transforms as T
 from PIL import Image
 from torch.utils.data import Dataset
-from scipy.ndimage import gaussian_filter
 
 
 # ─────────────────────────────────────────────────────────────
@@ -149,11 +148,11 @@ def relative_pose(T_a: np.ndarray,
 
 
 def _smooth_quantised_depth(depth, quant_threshold=500):
+    """Smooth depth maps quantised by JPG saving (no scipy needed)."""
     valid = depth > 0
     if valid.sum() == 0 or len(np.unique(depth[valid].round(3))) >= quant_threshold:
         return depth
     pad = np.pad(depth, 1, mode='edge')
-    h, w = depth.shape
     smoothed = (pad[:-2,:-2] + pad[:-2,1:-1] + pad[:-2,2:] +
                 pad[1:-1,:-2] + pad[1:-1,1:-1] + pad[1:-1,2:] +
                 pad[2:,:-2]  + pad[2:,1:-1]  + pad[2:,2:]) / 9.0
