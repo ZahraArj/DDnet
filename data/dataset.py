@@ -13,6 +13,7 @@ import torch.nn.functional as F
 import torchvision.transforms as T
 from PIL import Image
 from torch.utils.data import Dataset
+from scipy.ndimage import gaussian_filter
 
 
 # ─────────────────────────────────────────────────────────────
@@ -147,6 +148,35 @@ def relative_pose(T_a: np.ndarray,
     return R_ab.astype(np.float32), t_ab.astype(np.float32)
 
 
+def _smooth_quantised_depth(depth: np.ndarray,
+                             quant_threshold: int = 500,
+                             sigma: float = 1.0) -> np.ndarray:
+    """
+    Smooth depth maps that were saved via JPG and have quantisation
+    artifacts (stepped values at 0.1m intervals).
+
+    Only applies the blur when unique value count < quant_threshold,
+    which safely detects quantised depth without affecting
+    proper float32 depth maps from LiDAR or GSplat renders.
+
+    Args:
+        depth           : [H, W] float32, metres
+        quant_threshold : apply smoothing if unique values < this
+        sigma           : Gaussian blur radius in pixels
+    """
+    valid = depth > 0
+    if valid.sum() == 0:
+        return depth
+
+    n_unique = len(np.unique(depth[valid].round(3)))
+    if n_unique >= quant_threshold:
+        return depth   # already continuous — do nothing
+
+    # blur the full map then restore invalid pixels to 0
+    smoothed = gaussian_filter(depth.astype(np.float64), sigma=sigma)
+    return np.where(valid, smoothed, 0.0).astype(np.float32)
+
+
 # ─────────────────────────────────────────────────────────────
 # NPZPairDataset  —  your real data
 # ─────────────────────────────────────────────────────────────
@@ -214,6 +244,16 @@ class NPZPairDataset(BaseStereoDataset):
         K_a = data['K_a'].squeeze().astype(np.float32)
         K_b = data['K_b'].squeeze().astype(np.float32)
 
+
+        # ── depth ─────────────────────────────────────────
+        Z_a = data['Z_gt_a'].astype(np.float32)
+        Z_b = data['Z_gt_b'].astype(np.float32)
+
+        # smooth quantisation artifacts from JPG-saved depth
+        # only applied when depth was saved via JPG (few unique values)
+        Z_a = _smooth_quantised_depth(Z_a)
+        Z_b = _smooth_quantised_depth(Z_b)
+
         return dict(
             # PIL images (uint8 HWC → PIL RGB)
             img_a  = Image.fromarray(data['rgb_a'].astype(np.uint8)),
@@ -222,8 +262,8 @@ class NPZPairDataset(BaseStereoDataset):
             # numpy arrays
             K_a    = K_a,
             K_b    = K_b,
-            Z_gt_a = data['Z_gt_a'].astype(np.float32),   # [H, W] metres
-            Z_gt_b = data['Z_gt_b'].astype(np.float32),
+            Z_gt_a = Z_a,   # [H, W] metres
+            Z_gt_b = Z_b,
             D_gt_a = D_a.astype(np.float32),               # [C, H, W]
             D_gt_b = data['D_gt_b'].astype(np.float32),
             mask_a = data['mask_a'].astype(np.float32),    # [H, W]
