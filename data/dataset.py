@@ -148,33 +148,16 @@ def relative_pose(T_a: np.ndarray,
     return R_ab.astype(np.float32), t_ab.astype(np.float32)
 
 
-def _smooth_quantised_depth(depth: np.ndarray,
-                             quant_threshold: int = 500,
-                             sigma: float = 1.0) -> np.ndarray:
-    """
-    Smooth depth maps that were saved via JPG and have quantisation
-    artifacts (stepped values at 0.1m intervals).
-
-    Only applies the blur when unique value count < quant_threshold,
-    which safely detects quantised depth without affecting
-    proper float32 depth maps from LiDAR or GSplat renders.
-
-    Args:
-        depth           : [H, W] float32, metres
-        quant_threshold : apply smoothing if unique values < this
-        sigma           : Gaussian blur radius in pixels
-    """
+def _smooth_quantised_depth(depth, quant_threshold=500):
     valid = depth > 0
-    if valid.sum() == 0:
+    if valid.sum() == 0 or len(np.unique(depth[valid].round(3))) >= quant_threshold:
         return depth
-
-    n_unique = len(np.unique(depth[valid].round(3)))
-    if n_unique >= quant_threshold:
-        return depth   # already continuous — do nothing
-
-    # blur the full map then restore invalid pixels to 0
-    smoothed = gaussian_filter(depth.astype(np.float64), sigma=sigma)
-    return np.where(valid, smoothed, 0.0).astype(np.float32)
+    pad = np.pad(depth, 1, mode='edge')
+    h, w = depth.shape
+    smoothed = (pad[:-2,:-2] + pad[:-2,1:-1] + pad[:-2,2:] +
+                pad[1:-1,:-2] + pad[1:-1,1:-1] + pad[1:-1,2:] +
+                pad[2:,:-2]  + pad[2:,1:-1]  + pad[2:,2:]) / 9.0
+    return np.where(valid, smoothed.astype(np.float32), 0.0)
 
 
 # ─────────────────────────────────────────────────────────────
