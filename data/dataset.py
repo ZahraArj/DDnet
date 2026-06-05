@@ -255,9 +255,8 @@ class NPZPairDataset(BaseStereoDataset):
         Z_b = _smooth_quantised_depth(Z_b)
 
         return dict(
-            # PIL images (uint8 HWC → PIL RGB)
-            img_a  = Image.fromarray(data['rgb_a'].astype(np.uint8)),
-            img_b  = Image.fromarray(data['rgb_b'].astype(np.uint8)),
+            img_a = Image.fromarray(data['rgb_a'].astype(np.uint8)).convert('RGB'),
+            img_b = Image.fromarray(data['rgb_b'].astype(np.uint8)).convert('RGB'),
 
             # numpy arrays
             K_a    = K_a,
