@@ -299,8 +299,13 @@ class GeometryBlock(nn.Module):
 
         # ── Step 4: reproject pts3d_a into view B ──
         pts3d_in_b = torch.bmm(pts3d_a, R_ab.transpose(1, 2)) + t_ab.unsqueeze(1)
-        p_b_proj = project(pts3d_in_b, K_b)                 # [B, N, 2]
-        z_geom = pts3d_in_b[..., 2]                         # [B, N]
+
+        # mask out points behind the camera (negative Z = behind camera)
+        valid  = pts3d_in_b[..., 2] > 0.01          # [B, N]
+        weights = weights * valid.float()            # down-weight invalid points
+
+        p_b_proj = project(pts3d_in_b, K_b)         # [B, N, 2]
+        z_geom   = pts3d_in_b[..., 2]               # [B, N]
 
         return {
             "R_ab": R_ab,
