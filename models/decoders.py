@@ -117,7 +117,7 @@ class ConfHead(nn.Module):
         self.up2 = _upsample_block(128, 64)
         self.up3 = _upsample_block(64, 32)
         self.up4 = _upsample_block(32, 16)
-        self.head = nn.Conv2d(16, 3, kernel_size=1)
+        self.head = nn.Conv2d(16, 1, kernel_size=1)
 
     def forward(self, feat: torch.Tensor) -> torch.Tensor:
         """
