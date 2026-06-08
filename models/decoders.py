@@ -52,7 +52,8 @@ class DepthDecoder(nn.Module):
         self.up1 = _upsample_block(in_channels, 128)
         self.up2 = _upsample_block(128, 64)
         self.up3 = _upsample_block(64, 32)
-        self.head = nn.Conv2d(32, 1, kernel_size=1)
+        self.up4 = _upsample_block(32, 16)
+        self.head = nn.Conv2d(16, 1, kernel_size=1)
 
     def forward(self, feat: torch.Tensor) -> torch.Tensor:
         """
@@ -62,6 +63,7 @@ class DepthDecoder(nn.Module):
         x = self.up1(feat)
         x = self.up2(x)
         x = self.up3(x)
+        x = self.up4(x)
         x = self.head(x)
         # sigmoid → scale to [depth_min, depth_max]
         depth = torch.sigmoid(x) * (self.depth_max - self.depth_min) + self.depth_min
@@ -83,7 +85,8 @@ class DescDecoder(nn.Module):
         self.up1 = _upsample_block(in_channels, 128)
         self.up2 = _upsample_block(128, 64)
         self.up3 = _upsample_block(64, 32)
-        self.head = nn.Conv2d(32, desc_dim, kernel_size=1)
+        self.up4 = _upsample_block(32, 16)
+        self.head = nn.Conv2d(16, desc_dim, kernel_size=1)
 
     def forward(self, feat: torch.Tensor) -> torch.Tensor:
         """
@@ -93,6 +96,7 @@ class DescDecoder(nn.Module):
         x = self.up1(feat)
         x = self.up2(x)
         x = self.up3(x)
+        x = self.up4(x)
         x = self.head(x)
         return torch.nn.functional.normalize(x, dim=1)
 
@@ -112,7 +116,8 @@ class ConfHead(nn.Module):
         self.up1 = _upsample_block(in_channels, 128)
         self.up2 = _upsample_block(128, 64)
         self.up3 = _upsample_block(64, 32)
-        self.head = nn.Conv2d(32, 1, kernel_size=1)
+        self.up4 = _upsample_block(32, 16)
+        self.head = nn.Conv2d(16, 3, kernel_size=1)
 
     def forward(self, feat: torch.Tensor) -> torch.Tensor:
         """
@@ -122,6 +127,7 @@ class ConfHead(nn.Module):
         x = self.up1(feat)
         x = self.up2(x)
         x = self.up3(x)
+        x = self.up4(x)
         return torch.sigmoid(self.head(x))
 
 
@@ -142,6 +148,7 @@ class PointmapHead(nn.Module):
         self.up1 = _upsample_block(in_channels, 128)
         self.up2 = _upsample_block(128, 64)
         self.up3 = _upsample_block(64, 32)
+        self.up4 = _upsample_block(32, 16)
         self.head = nn.Conv2d(32, 3, kernel_size=1)
 
     def forward(self, feat: torch.Tensor) -> torch.Tensor:
@@ -152,6 +159,8 @@ class PointmapHead(nn.Module):
         x = self.up1(feat)
         x = self.up2(x)
         x = self.up3(x)
+        x = self.up4(x)
+        
         return self.head(x)
 
 
