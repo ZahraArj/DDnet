@@ -41,18 +41,20 @@ def main(cfg: DictConfig):
     # Option A: directory of .npz files
     if OmegaConf.select(cfg, 'data.train_dir'):
         train_ds = NPZPairDataset(
-            source   = cfg.data.train_dir,
-            img_h    = cfg.data.img_height,
-            img_w    = cfg.data.img_width,
-            desc_dim = cfg.model.desc_dim,
-            split    = 'train',
+            source    = cfg.data.train_dir,
+            img_h     = cfg.data.img_height,
+            img_w     = cfg.data.img_width,
+            desc_dim  = cfg.model.desc_dim,
+            image_dir = cfg.data.image_dir,
+            split     = 'train',
         )
         val_ds = NPZPairDataset(
-            source   = cfg.data.val_dir,
-            img_h    = cfg.data.img_height,
-            img_w    = cfg.data.img_width,
-            desc_dim = cfg.model.desc_dim,
-            split    = 'val',
+            source    = cfg.data.val_dir,
+            img_h     = cfg.data.img_height,
+            img_w     = cfg.data.img_width,
+            desc_dim  = cfg.model.desc_dim,
+            image_dir = cfg.data.image_dir,
+            split     = 'val',
         )
 
     # Option B: text-file lists

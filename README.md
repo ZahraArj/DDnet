@@ -210,6 +210,10 @@ python save_run.py --name desc32_480x640_50epochs
 
 # evaluate an already-saved run
 python save_run.py --name desc32_480x640_50epochs --eval --skip_copy
+
+# delete the active run folder
+rm -rf runs/ddnet_real/
+
 ```
 
 This creates:

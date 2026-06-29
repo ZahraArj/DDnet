@@ -40,6 +40,7 @@ training:
 data:
   img_height: 480
   img_width:  640
-  dataset_root: "/nas2/zahra/ddnet/Data/"
-  train_dir:   "/nas2/zahra/ddnet/Data/"  
-  val_dir:     "/nas2/zahra/ddnet/Data/"  
+  dataset_root: "/nas2/zahra/ddnet/Data/stadium_pairs/"
+  train_dir:   "/nas2/zahra/ddnet/Data/stadium_pairs/"  
+  val_dir:     "/nas2/zahra/ddnet/Data/stadium_pairs/"
+  image_dir: "/nas2/zahra/ddnet/images/starium_images/"   

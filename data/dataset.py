@@ -176,17 +176,15 @@ class NPZPairDataset(BaseStereoDataset):
         split    : 'train' or 'val'  (informational only)
     """
 
-    def __init__(self, source: str, img_h: int = 384, img_w: int = 512,
-                 desc_dim: int = 128, split: str = 'train'):
+    def __init__(self, source, img_h=480, img_w=640, desc_dim=32,
+                split='train', image_dir=None):
         super().__init__(img_h, img_w, split)
-        self.desc_dim = desc_dim
-        self.files    = self._collect_files(source)
-
+        self.desc_dim  = desc_dim
+        self.image_dir = image_dir
+        self.files     = self._collect_files(source)
         if len(self.files) == 0:
-            raise RuntimeError(
-                f'NPZPairDataset: no .npz files found in {source}')
-        print(f'[NPZPairDataset] {split}: {len(self.files)} pairs  '
-              f'from {source}')
+            raise RuntimeError(f'NPZPairDataset: no .npz files in {source}')
+        print(f'[NPZPairDataset] {split}: {len(self.files)} pairs from {source}')
 
     @staticmethod
     def _collect_files(source: str) -> list:
@@ -202,60 +200,49 @@ class NPZPairDataset(BaseStereoDataset):
     def __len__(self) -> int:
         return len(self.files)
 
-    def _load_item(self, idx: int) -> dict:
+    def _load_item(self, idx):
+        import re
         path = self.files[idx]
-        try:
-            data = np.load(path, allow_pickle=True)
-        except Exception as e:
-            raise RuntimeError(f'Failed to load {path}: {e}')
+        data = np.load(path, allow_pickle=True)
 
-        # ── validate descriptor dimension ─────────────────
-        D_a = data['D_gt_a']   # [C, H_orig, W_orig]
-        C_file = D_a.shape[0]
-        if C_file != self.desc_dim:
+        # validate descriptor dim
+        D_a = data['D_gt_a']
+        if D_a.shape[0] != self.desc_dim:
             raise ValueError(
-                f'{path}: descriptor dim {C_file} != '
-                f'cfg.model.desc_dim {self.desc_dim}. '
-                f'Update cfg.model.desc_dim or re-export descriptors.')
+                f'{path}: desc dim {D_a.shape[0]} != {self.desc_dim}')
 
-        # ── original resolution ───────────────────────────
-        H_orig, W_orig = data['rgb_a'].shape[:2]
+        # ── parse frame IDs and re-pad to 8 digits ──
+        fname = os.path.basename(path)
+        m = re.search(r'(\d+)_to_(\d+)', fname)
+        frame_a = int(m.group(1))   # "0321" → 321
+        frame_b = int(m.group(2))
+        img_a_path = os.path.join(self.image_dir, f'{frame_a:08d}.jpg')  # 321 → 00000321.jpg
+        img_b_path = os.path.join(self.image_dir, f'{frame_b:08d}.jpg')
 
-        # ── intrinsics ────────────────────────────────────
-        # squeeze handles both [3,3] and [1,3,3]
+        # ── load RGB from separate files ──
+        img_a = Image.open(img_a_path).convert('RGB')
+        img_b = Image.open(img_b_path).convert('RGB')
+        W_orig, H_orig = img_a.size   # PIL gives (W, H)
+
+        # ── depth ──
+        Z_a = _smooth_quantised_depth(data['Z_gt_a'].astype(np.float32))
+        Z_b = _smooth_quantised_depth(data['Z_gt_b'].astype(np.float32))
+
+        # ── intrinsics ──
         K_a = data['K_a'].squeeze().astype(np.float32)
         K_b = data['K_b'].squeeze().astype(np.float32)
 
-
-        # ── depth ─────────────────────────────────────────
-        Z_a = data['Z_gt_a'].astype(np.float32)
-        Z_b = data['Z_gt_b'].astype(np.float32)
-
-        # smooth quantisation artifacts from JPG-saved depth
-        # only applied when depth was saved via JPG (few unique values)
-        Z_a = _smooth_quantised_depth(Z_a)
-        Z_b = _smooth_quantised_depth(Z_b)
-
         return dict(
-            img_a = Image.fromarray(data['rgb_a'].astype(np.uint8)).convert('RGB'),
-            img_b = Image.fromarray(data['rgb_b'].astype(np.uint8)).convert('RGB'),
-
-            # numpy arrays
-            K_a    = K_a,
-            K_b    = K_b,
-            Z_gt_a = Z_a,   # [H, W] metres
-            Z_gt_b = Z_b,
-            D_gt_a = D_a.astype(np.float32),               # [C, H, W]
-            D_gt_b = data['D_gt_b'].astype(np.float32),
-            mask_a = data['mask_a'].astype(np.float32),    # [H, W]
-            mask_b = data['mask_b'].astype(np.float32),
-
-            # poses (optional — used for evaluation only)
-            T_a    = data['T_a'] if 'T_a' in data else None,
-            T_b    = data['T_b'] if 'T_b' in data else None,
-
-            # pass original resolution so K can be scaled correctly
-            orig_hw = (H_orig, W_orig),
+            img_a=img_a, img_b=img_b,
+            K_a=K_a, K_b=K_b,
+            Z_gt_a=Z_a, Z_gt_b=Z_b,
+            D_gt_a=D_a.astype(np.float32),
+            D_gt_b=data['D_gt_b'].astype(np.float32),
+            mask_a=data['mask_a'].astype(np.float32),
+            mask_b=data['mask_b'].astype(np.float32),
+            T_a=data['T_a'] if 'T_a' in data else None,
+            T_b=data['T_b'] if 'T_b' in data else None,
+            orig_hw=(H_orig, W_orig),
         )
 
 
