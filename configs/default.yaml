@@ -6,7 +6,7 @@ model:
   cross_attn_heads: 8
   cross_attn_layers: 2
   depth_min: 0.1
-  depth_max: 100.0
+  depth_max: 400.0
   desc_dim: 32
   ema_momentum: 0.996
 
@@ -24,7 +24,7 @@ training:
     active_losses: [depth_sup, desc_sup, reproj, depth_mv, desc_mv, smooth]
     lr: 2.0e-5
   batch_size: 8
-  batch_size_geo: 2        # smaller batch for stage 2/3 (geometry block is memory-heavy)
+  batch_size_geo: 1        # smaller batch for stage 2/3 (geometry block is memory-heavy)
   num_workers: 0
   grad_clip: 1.0
   lambda_depth_sup: 1.0
@@ -34,7 +34,7 @@ training:
   lambda_depth_mv:  0.0001
   lambda_desc_mv:   0.01
   lambda_smooth:    0.1
-  n_corr_samples: 512
+  n_corr_samples: 256
   reproj_loss_robust: "huber"
 
 data:
