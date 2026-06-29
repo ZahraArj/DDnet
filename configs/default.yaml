@@ -43,4 +43,4 @@ data:
   dataset_root: "/nas2/zahra/ddnet/Data/stadium_pairs/"
   train_dir:   "/nas2/zahra/ddnet/Data/stadium_pairs/"  
   val_dir:     "/nas2/zahra/ddnet/Data/stadium_pairs/"
-  image_dir: "/nas2/zahra/ddnet/Data/starium_images/"   
+  image_dir: "/nas2/zahra/ddnet/Data/stadium_images/"   
