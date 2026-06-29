@@ -177,14 +177,42 @@ class NPZPairDataset(BaseStereoDataset):
     """
 
     def __init__(self, source, img_h=480, img_w=640, desc_dim=32,
-                split='train', image_dir=None):
+                split='train', image_dir=None,
+                val_frac=0.15, test_frac=0.15, seed=42):
         super().__init__(img_h, img_w, split)
         self.desc_dim  = desc_dim
         self.image_dir = image_dir
-        self.files     = self._collect_files(source)
-        if len(self.files) == 0:
+
+        # collect ALL files, then split deterministically
+        all_files = self._collect_files(source)
+        if len(all_files) == 0:
             raise RuntimeError(f'NPZPairDataset: no .npz files in {source}')
-        print(f'[NPZPairDataset] {split}: {len(self.files)} pairs from {source}')
+
+        self.files = self._split(all_files, split, val_frac, test_frac, seed)
+
+        print(f'[NPZPairDataset] {split}: {len(self.files)} pairs '
+            f'(of {len(all_files)} total) from {source}')
+    @staticmethod
+    def _split(all_files, split, val_frac, test_frac, seed):
+        """Deterministic train/val/test split — same seed = same split always."""
+        import random
+        files = sorted(all_files)          # sort first for determinism
+        rng   = random.Random(seed)        # local RNG, does not affect global seed
+        rng.shuffle(files)
+
+        n      = len(files)
+        n_test = int(n * test_frac)
+        n_val  = int(n * val_frac)
+
+        test_files  = files[:n_test]
+        val_files   = files[n_test:n_test + n_val]
+        train_files = files[n_test + n_val:]
+
+        return {
+            'train': train_files,
+            'val':   val_files,
+            'test':  test_files,
+        }[split]
 
     @staticmethod
     def _collect_files(source: str) -> list:

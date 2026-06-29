@@ -35,7 +35,7 @@ def evaluate(checkpoint_path: str, device: str = "cuda"):
         img_h    = cfg.data.img_height,
         img_w    = cfg.data.img_width,
         desc_dim = cfg.model.desc_dim,
-        split    = 'val',
+        split    = 'test',
         )
     loader  = DataLoader(dataset, batch_size=4, shuffle=False, num_workers=2)
 
